@@ -66,9 +66,13 @@ if __name__ == '__main__':
     logger.addHandler(file_handler)
     '''data = {game_id: {radiant: [heroes], dire: [heroes], win: str(dire or radiant), duration: {min, sec}, game_mode: str, skill: str}}'''
     data = load_data()
+    last_cnt = len(data)
     while True:
-        logger.info('Парсим')
+        logger.info('Апдейтим')
         update_data()
-        save_data()
-        logger.info(f'Спарсили {len(data)} матчей')
+        if last_cnt != len(data):
+            last_cnt = len(data)
+            save_data()
+            logger.info(f'Спарсили {len(data)} матчей')
+            print(f'Спарсили {len(data)} матчей')
         sleep(60)
