@@ -58,13 +58,13 @@ def update_data():
 
 
 if __name__ == '__main__':
-    '''Create logger'''
+    # Create logger
     logger = logging.getLogger('parser')
     logger.setLevel(logging.DEBUG)
     file_handler = logging.FileHandler('parser.log')
     file_handler.setFormatter(logging.Formatter('%(filename)s[LINE:%(lineno)-3s]# %(levelname)-8s [%(asctime)s]  %(message)s'))
     logger.addHandler(file_handler)
-    '''data = {game_id: {radiant: [heroes], dire: [heroes], win: str(dire or radiant), duration: {min, sec}, game_mode: str, skill: str}}'''
+    # data = {game_id: {radiant: [heroes], dire: [heroes], win: str(dire or radiant), duration: {min, sec}, game_mode: str, skill: str}}
     data = load_data()
     last_cnt = len(data)
     while True:
