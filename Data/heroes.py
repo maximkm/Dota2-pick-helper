@@ -15,6 +15,79 @@ def get_patch():
     return None
 
 
+# def debug():
+#     soup = BeautifulSoup(session.get('https://www.dotabuff.com/heroes', headers=headers).text, 'html.parser')
+#     heroes = soup.find('footer', attrs={'style': 'padding: 0'}).next.contents
+#     links = []
+#     for hero in heroes:
+#         link = hero.attrs.get('href', '')
+#         if link != '':
+#             links.append(link)
+#     for link in links:
+#         soup = BeautifulSoup(session.get(f'https://www.dotabuff.com{link}', headers=headers).text, 'html.parser')
+#         describe = soup.find('div', attrs={'class': 'header-content-title'}).next.contents
+#         name = str(describe[0])
+#         data[name] = dict()
+#         data[name]['cnt_skills'] = {}
+
+
+def get_skills_for_name(name, link):
+    soup = BeautifulSoup(session.get(link, headers=headers).text, 'html.parser')
+    items = soup.find_all('div', {'class': re.compile('skilllist skilllist-col2')})
+    items = list(map(lambda x: x.contents[-1].next.contents[1::2], items))
+    for num, section in enumerate(items):
+        if isinstance(name, list):
+            if num >= len(name):
+                break
+            name_col = name[num]
+        else:
+            name_col = name
+        if name_col:
+            for hero in data.keys():
+                data[hero]['cnt_skills'][name_col] = data[hero]['cnt_skills'].get(name_col, 0)
+        else:
+            continue
+        for item in section:
+            hero, *act = item.text.replace(' - ', ' – ').split(' – ')
+            if hero[0] == ' ':
+                hero = hero[1:]
+            if hero in data:
+                data[hero]['cnt_skills'][name_col] = data[hero]['cnt_skills'][name_col] + 1
+
+
+def cnt_skills():
+    # TODO slow
+    name_link = [['dispel', 'https://dota2.gamepedia.com/Dispel'],
+                 ['silence', 'https://dota2.gamepedia.com/Silence'],
+                 ['attributes', 'https://dota2.gamepedia.com/Attributes'],
+                 [['heal', '', 'heal_setting', 'max_health', '', 'heal_manipulation', 'heal_freeze', 'healing_and_regeneration',
+                      'based_on_max_health', 'based_on_current_health', 'other_health_based'], 'https://dota2.gamepedia.com/Health'],
+                 [['magic_resist_inc', 'magic_resist_red'], 'https://dota2.gamepedia.com/Magic_resistance'],
+                 [['mana_restoring', '', 'mana_removing', 'mana_setting', 'max_mana_altering', '', '', '', 'abilities_based_on_max_mana',
+                   'abilities_based_on_current_mana', 'other_abilities_with_mana_based'], 'https://dota2.gamepedia.com/Mana'],
+                 [['vision_inc', 'vision_red'], 'https://dota2.gamepedia.com/Vision'],
+                 ['aura', 'https://dota2.gamepedia.com/Aura'],
+                 ['damage_manipulation', 'https://dota2.gamepedia.com/Damage_manipulation'],
+                 ['channeling', 'https://dota2.gamepedia.com/Channeling'],
+                 ['damage_over_time', 'https://dota2.gamepedia.com/Damage_over_time'],
+                 ['evasion', 'https://dota2.gamepedia.com/Evasion'],
+                 ['teleport', 'https://dota2.gamepedia.com/Teleport'],
+                 ['disarm', 'https://dota2.gamepedia.com/Disarm'],
+                 ['forced_move', 'https://dota2.gamepedia.com/Forced_movement'],
+                 ['hex', 'https://dota2.gamepedia.com/Hex'],
+                 ['hide', 'https://dota2.gamepedia.com/Hide'],
+                 ['invisibility', 'https://dota2.gamepedia.com/Invisibility'],
+                 [['invulnerability', 'invulnerability_piercing'], 'https://dota2.gamepedia.com/Invulnerability'],
+                 [['leash', 'disable_by_leash'], 'https://dota2.gamepedia.com/Leash'],
+                 [['root', '', 'disable_by_root'], 'https://dota2.gamepedia.com/Root'],
+                 ['sleep', 'https://dota2.gamepedia.com/Sleep'],
+                 ['spell_immunity', 'https://dota2.gamepedia.com/Spell_immunity'],
+                 ['stun', 'https://dota2.gamepedia.com/Stun'],
+                 ['taunt', 'https://dota2.gamepedia.com/Taunt']]
+    for name, link in name_link[::-1]:
+        get_skills_for_name(name, link)
+
+
 def upgrade_skill():
     soup = BeautifulSoup(session.get('https://www.dotabuff.com/heroes', headers=headers).text, 'html.parser')
     heroes = soup.find('footer', attrs={'style': 'padding: 0'}).next.contents
@@ -86,8 +159,8 @@ def upgrade_skill():
         data[name]['dmg_hero_minute'] = float(hero.contents[2].attrs['data-value'])
         data[name]['dmg_tower_minute'] = float(hero.contents[3].attrs['data-value'])
         data[name]['heal_minute'] = float(hero.contents[4].attrs['data-value'])
-        # TODO
-        data[name]['cnt_skills'] = []
+        data[name]['cnt_skills'] = {}
+    cnt_skills()
 
 
 def save_data():
@@ -99,7 +172,8 @@ if __name__ == '__main__':
     '''
     data = {hero:
             {roles: [str], stats: {str: int, agi: int, int: int}, inc_stats: {str: float, agi: float, int: float},
-            cnt_skills: [stun: int, save: int, heal: int, dispell: int, silence: int, armor: int, controll: int, mobility: int],
+            cnt_skills: [stun: float, save: float, heal: float, dispell: float, silence: float, armor: float, controll: float,
+            mobility: float, global: float],
             advantages: {hero: float}, kda: float, dmg_hero_minute: float, dmg_tower_minute: float, heal_minute: float, gold_minute: float, 
             exp_minute: float, winrate: {rank: float}, pickrate: {rank: float}, move_speed: int, armor: float, sight_range: {day, night},
              damage: {min: int, max: int}, attack_time: float, main_attribute: str}
@@ -111,4 +185,3 @@ if __name__ == '__main__':
     data = dict()
     upgrade_skill()
     save_data()
-    pass
