@@ -1,10 +1,13 @@
+from heroes import get_patch
 import requests
 import logging
+from datetime import datetime
 from bs4 import BeautifulSoup
 from json import load as js_load, dump as js_dump
 from time import sleep
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36'}
+PATCH = None
 
 
 def load_data():
@@ -22,10 +25,12 @@ def save_data():
 
 
 def get_info(match):
+    global PATCH
     res = match.contents
     info = {}
     game_id = str(res[0].next.contents[0])
     info['game_mode'] = res[1].contents[0]
+    info['patch'] = PATCH
     info['win'] = res[2].next.contents[0].replace(' Victory', '')
     time = list(map(int, res[3].contents[0].split(':')))
     info['duration'] = {'m': time[0], 's': time[1]}
@@ -36,7 +41,7 @@ def get_info(match):
     return game_id, info
 
 
-def update_data():
+def update_data(patch=None):
     skill_bracket = ['normal_skill', 'high_skill', 'very_high_skill']
     regions = ['us_west', 'us_east', 'europe_west', 'south_korea', 'se_asia', 'chile', 'australia', 'russia', 'europe_east', 'south_america',
                'south_africa', 'china', 'dubai', 'peru', 'india']
@@ -57,6 +62,10 @@ def update_data():
                         logger.exception(error)
 
 
+def get_time(form='%H:%M:%S>'):
+    return datetime.today().strftime(form)
+
+
 if __name__ == '__main__':
     # Create logger
     logger = logging.getLogger('parser')
@@ -68,11 +77,18 @@ if __name__ == '__main__':
     data = load_data()
     last_cnt = len(data)
     while True:
-        logger.info('Апдейтим')
-        update_data()
+        try:
+            logger.info('Апдейтим')
+            print(f'{get_time()} Апдейтим')
+            PATCH = get_patch()
+            update_data()
+        except Exception as error:
+            logger.exception(f"Ошибка во время парсинга. {error}")
+            print(f'{get_time()} Ошибка во время парсинга')
+            sleep(120)
         if last_cnt != len(data):
             last_cnt = len(data)
             save_data()
-            logger.info(f'Спарсили {len(data)} матчей')
+            logger.info(f'{get_time()} Спарсили {len(data)} матчей')
             print(f'Спарсили {len(data)} матчей')
         sleep(60)

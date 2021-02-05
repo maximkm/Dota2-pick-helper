@@ -3,6 +3,9 @@ from bs4 import BeautifulSoup
 from json import dump as js_dump
 import re
 
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36'}
+session = requests.Session()
+
 
 def get_patch():
     soup = BeautifulSoup(session.get('https://www.dotabuff.com/heroes/impact', headers=headers).text, 'html.parser')
@@ -48,6 +51,8 @@ def get_skills_for_name(name, link):
         else:
             continue
         for item in section:
+            if isinstance(item, str):
+                continue
             hero, *act = item.text.replace(' - ', ' – ').split(' – ')
             if hero[0] == ' ':
                 hero = hero[1:]
@@ -61,7 +66,7 @@ def cnt_skills():
                  ['silence', 'https://dota2.gamepedia.com/Silence'],
                  ['attributes', 'https://dota2.gamepedia.com/Attributes'],
                  [['heal', '', 'heal_setting', 'max_health', '', 'heal_manipulation', 'heal_freeze', 'healing_and_regeneration',
-                      'based_on_max_health', 'based_on_current_health', 'other_health_based'], 'https://dota2.gamepedia.com/Health'],
+                   'based_on_max_health', 'based_on_current_health', 'other_health_based'], 'https://dota2.gamepedia.com/Health'],
                  [['magic_resist_inc', 'magic_resist_red'], 'https://dota2.gamepedia.com/Magic_resistance'],
                  [['mana_restoring', '', 'mana_removing', 'mana_setting', 'max_mana_altering', '', '', '', 'abilities_based_on_max_mana',
                    'abilities_based_on_current_mana', 'other_abilities_with_mana_based'], 'https://dota2.gamepedia.com/Mana'],
@@ -179,8 +184,6 @@ if __name__ == '__main__':
              damage: {min: int, max: int}, attack_time: float, main_attribute: str}
            }
     '''
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36'}
-    session = requests.Session()
     PATCH = get_patch()
     data = dict()
     upgrade_skill()
