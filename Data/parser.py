@@ -1,13 +1,17 @@
+from json import load as js_load, dump as js_dump
 from heroes import get_patch
-import requests
-import logging
 from datetime import datetime
 from bs4 import BeautifulSoup
-from json import load as js_load, dump as js_dump
 from time import sleep
+import requests
+import logging
+import psutil
+import os
+import sys
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36'}
 PATCH = None
+process = psutil.Process(os.getpid())
 
 
 def load_data():
@@ -20,6 +24,7 @@ def load_data():
 
 
 def save_data():
+    print(f'{get_time()} Сохраняем')
     with open('matches.json', 'w') as write_file:
         js_dump(data, write_file)
 
@@ -41,7 +46,7 @@ def get_info(match):
     return game_id, info
 
 
-def update_data(patch=None):
+def update_data():
     skill_bracket = ['normal_skill', 'high_skill', 'very_high_skill']
     regions = ['us_west', 'us_east', 'europe_west', 'south_korea', 'se_asia', 'chile', 'australia', 'russia', 'europe_east', 'south_america',
                'south_africa', 'china', 'dubai', 'peru', 'india']
@@ -77,6 +82,9 @@ if __name__ == '__main__':
     data = load_data()
     last_cnt = len(data)
     while True:
+        memory = process.memory_info().rss / 1024 ** 2
+        print(f'{get_time()} Usage memory: {memory}M')
+        logger.info(f'{get_time()} Usage memory: {memory}M')
         try:
             logger.info('Апдейтим')
             print(f'{get_time()} Апдейтим')
@@ -91,4 +99,7 @@ if __name__ == '__main__':
             save_data()
             logger.info(f'{get_time()} Спарсили {len(data)} матчей')
             print(f'Спарсили {len(data)} матчей')
+        if memory > 700:
+            print(f'{get_time()} Перезапуск')
+            os.execl(sys.executable, 'python', __file__, *sys.argv[1:])
         sleep(60)
