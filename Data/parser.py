@@ -11,6 +11,7 @@ import sys
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36'}
 PATCH = None
+executable = '/usr/bin/python3'
 process = psutil.Process(os.getpid())
 
 
@@ -100,6 +101,7 @@ if __name__ == '__main__':
             logger.info(f'{get_time()} Спарсили {len(data)} матчей')
             print(f'Спарсили {len(data)} матчей')
         if memory > 700:
+            print(sys.executable, __file__, *sys.argv[1:])
             print(f'{get_time()} Перезапуск')
-            os.execl(sys.executable, 'python', __file__, *sys.argv[1:])
+            os.execl(executable, 'python', __file__, *sys.argv[1:])
         sleep(60)
